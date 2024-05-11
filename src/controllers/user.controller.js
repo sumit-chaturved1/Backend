@@ -11,15 +11,23 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiErrors(400, "All feilds need to be filled");
   }
 
-  const userExists = User.findOne({
+  const userExists = await User.findOne({
     $or: [{ username }, { email }],
   });
   if (userExists) {
-    throw new ApiErrors(409, "User already exists");
+    throw new ApiErrors(409, "User already exists with same username or email");
   }
 
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  //const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  let coverImageLocalPath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverImageLocalPath = req.files?.coverImage[0]?.path;
+  }
 
   if (!avatarLocalPath) {
     throw new ApiErrors(400, "Avatar is required");
@@ -41,7 +49,9 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
   });
 
-  const createdUser = User.findById(user._id).select("-password -refreshToken");
+  const createdUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
   if (!createdUser) {
     throw new ApiErrors(500, "Somthing went wrong while registering the user");
   }
@@ -52,7 +62,3 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 export { registerUser };
-
-// console.log(
-//   `fullName: ${fullName}, username: ${username}, email: ${email}, password: ${password}`
-// );
