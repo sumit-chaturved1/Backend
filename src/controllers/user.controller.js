@@ -82,7 +82,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
-  if (!username || !email) {
+  if (!(username || email)) {
     throw new ApiErrors(400, "username or email is ruquired");
   }
   const user = await User.findOne({
@@ -96,8 +96,9 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiErrors(401, "user credintials incorrect");
   }
 
-  const { accessToken, refreshToken } =
-    await generateAccessAndRefreshToken(user_id);
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id
+  );
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
@@ -124,11 +125,11 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  const user = User.findByIdAndUpdate(
+  await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined,
+      $unset: {
+        refreshToken: 1,
       },
     },
     {
