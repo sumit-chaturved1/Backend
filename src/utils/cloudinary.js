@@ -22,4 +22,16 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export { uploadOnCloudinary };
+const deleteFromCloudinary = async (oldFileCloudinaryUrl) => {
+  try {
+    if (!oldFileCloudinaryUrl) return null;
+    await cloudinary.uploader.destroy(oldFileCloudinaryUrl, (result) => {
+      console.log(result);
+    });
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
+export { uploadOnCloudinary, deleteFromCloudinary };
