@@ -1,7 +1,10 @@
 import { User } from "../models/user.model.js";
 import { ApiErrors } from "../utils/ApiErrors.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -268,7 +271,14 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   if (!avatar) {
     throw new ApiErrors(400, "Error while uploading avatar on cloudinary");
   }
-  const user = await User.findByIdAndUpdate(
+
+  const user = await User.findById(req.user?._id);
+
+  const oldAvatarCloudinaryUrl = user.avatar;
+
+  await deleteFromCloudinary(oldAvatarCloudinaryUrl);
+
+  const newUser = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
@@ -280,7 +290,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, user, "Avatar changed successfully"));
+    .json(new ApiResponse(200, newUser, "Avatar changed successfully"));
 });
 
 // ~~~~~~~~~~~~~~~~~~~~~~ Change User CoverImage ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -294,7 +304,14 @@ const updateUserCoverimage = asyncHandler(async (req, res) => {
   if (!coverImage) {
     throw new ApiErrors(400, "Error while uploading coverImage on cloudinary");
   }
-  const user = await User.findByIdAndUpdate(
+
+  const user = await User.findById(req.user?._id);
+
+  const oldCoverImageCloudinaryUrl = user.coverImage;
+
+  await deleteFromCloudinary(oldCoverImageCloudinaryUrl);
+
+  const newUser = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
@@ -306,7 +323,7 @@ const updateUserCoverimage = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, user, "coverImage changed successfully"));
+    .json(new ApiResponse(200, newUser, "coverImage changed successfully"));
 });
 
 export {
